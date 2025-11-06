@@ -3,41 +3,26 @@ from datetime import datetime
 
 from app.config import USE_MOCKS
 from app.schemas import Telematics
-from app.state import VEHICLE_STATE, APPOINTMENTS, UEBA_LOG, UEBA_ALERTS
-from app.orchestrator import MasterAgent
+from app.state import VEHICLE_STATE, UEBA_ALERTS
+from app.orchestrator_graph import MasterAgentGraph 
 
-# Import specific agents based on config
 if USE_MOCKS:
     from app.agents.mocks import (
-        MockDataAgent, MockDiagnosisAgent, MockVoiceAgent,
+        MockDataAgent, MockDiagnosisAgent, GeminiVoiceAgent,
         MockSchedulingAgent, MockFeedbackAgent, MockManufacturingAgent
     )
-else:
-    # This is where you would import your HTTP-based clients
-    raise RuntimeError("HTTP worker clients not wired in this demo – set USE_MOCKS=True.")
 
-# --- App Creation & Dependency Injection ---
+app = FastAPI(title="Master Orchestrator – LangGraph Edition", version="2.0")
 
-app = FastAPI(title="Master Orchestrator – Predictive Maintenance", version="1.0")
-
-# Instantiate Master with either MOCK or HTTP clients
-if USE_MOCKS:
-    master = MasterAgent(
-        data_agent=MockDataAgent(),
-        diagnosis_agent=MockDiagnosisAgent(),
-        voice_agent=MockVoiceAgent(),
-        scheduling_agent=MockSchedulingAgent(),
-        feedback_agent=MockFeedbackAgent(),
-        mfg_agent=MockManufacturingAgent(),
-    )
-else:
-    # master = MasterAgent(
-    #     data_agent=HTTPDataAgent(WORKER_URLS["data"]),
-    #     ...
-    # )
-    pass
-
-# --- API Routes ---
+# 🆕 Initialize LangGraph Master
+master = MasterAgentGraph(
+    data_agent=MockDataAgent(),
+    diagnosis_agent=MockDiagnosisAgent(),
+    voice_agent=GeminiVoiceAgent(),
+    scheduling_agent=MockSchedulingAgent(),
+    feedback_agent=MockFeedbackAgent(),
+    mfg_agent=MockManufacturingAgent(),
+)
 
 @app.get("/")
 async def root():
@@ -45,13 +30,19 @@ async def root():
 
 @app.post("/ingest/telematics")
 async def ingest_telematics(t: Telematics):
-    """Main entrypoint: send a single telematics sample to drive the full flow."""
+    """Main entrypoint with LangGraph orchestration"""
     try:
         result = await master.process_telematics(t)
-        return {"status": "processed", "result": result, "ueba_alerts": [a.model_dump() for a in UEBA_ALERTS[-5:]]}
+        return {
+            "status": "processed",
+            "result": result,
+            "ueba_alerts": [a.model_dump() for a in UEBA_ALERTS[-5:]]
+        }
     except Exception as e:
-        # Log the exception e
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
 
 @app.get("/state/{vehicle_id}")
 async def get_state(vehicle_id: str):
