@@ -4,6 +4,37 @@ Welcome to the 'Automove [Hero + M&M]' hackathon project!
 
 This repository contains the **Master Orchestrator** for our agentic AI system. Its job is to coordinate multiple "worker" agents to predict vehicle failures, talk to customers, and schedule maintenance, all while feeding insights back to manufacturing.
 
+```mermaid
+graph TD;
+        __start__([<p>__start__</p>]):::first
+        analyze(analyze)
+        predict(predict)
+        craft_script(craft_script)
+        call_customer(call_customer)
+        propose_appointment(propose_appointment)
+        confirm_appointment(confirm_appointment)
+        request_feedback(request_feedback)
+        submit_rca(submit_rca)
+        log_low_risk(log_low_risk)
+        __end__([<p>__end__</p>]):::last
+        __start__ --> analyze;
+        analyze --> predict;
+        call_customer -. &nbsp;end&nbsp; .-> __end__;
+        call_customer -. &nbsp;schedule&nbsp; .-> propose_appointment;
+        call_customer -. &nbsp;rca_only&nbsp; .-> submit_rca;
+        confirm_appointment --> request_feedback;
+        craft_script --> call_customer;
+        predict -. &nbsp;critical&nbsp; .-> craft_script;
+        predict -. &nbsp;low&nbsp; .-> log_low_risk;
+        propose_appointment --> confirm_appointment;
+        request_feedback --> submit_rca;
+        log_low_risk --> __end__;
+        submit_rca --> __end__;
+        classDef default fill:#f2f0ff,line-height:1.2
+        classDef first fill-opacity:0
+        classDef last fill:#bfb6fc
+```
+
 ## Quick Start
 
 Get the app running on your machine in 2 minutes.
