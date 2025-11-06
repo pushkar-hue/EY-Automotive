@@ -1,9 +1,10 @@
+# app/api.py
 from fastapi import FastAPI, HTTPException
 from datetime import datetime
 
 from app.config import USE_MOCKS
 from app.schemas import Telematics
-from app.state import VEHICLE_STATE, UEBA_ALERTS
+from app.state import VEHICLE_STATE, APPOINTMENTS, UEBA_LOG, UEBA_ALERTS 
 from app.orchestrator_graph import MasterAgentGraph 
 
 if USE_MOCKS:
@@ -14,7 +15,7 @@ if USE_MOCKS:
 
 app = FastAPI(title="Master Orchestrator – LangGraph Edition", version="2.0")
 
-# 🆕 Initialize LangGraph Master
+# Initialize LangGraph Master
 master = MasterAgentGraph(
     data_agent=MockDataAgent(),
     diagnosis_agent=MockDiagnosisAgent(),
@@ -39,10 +40,9 @@ async def ingest_telematics(t: Telematics):
             "ueba_alerts": [a.model_dump() for a in UEBA_ALERTS[-5:]]
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
-
-
-
 
 @app.get("/state/{vehicle_id}")
 async def get_state(vehicle_id: str):
@@ -55,7 +55,7 @@ async def get_appointment(vehicle_id: str):
     appt = APPOINTMENTS.get(vehicle_id)
     if not appt:
         return {"booking": None}
-    return appt
+    return appt.model_dump() if appt else None
 
 @app.get("/ueba/logs")
 async def ueba_logs(limit: int = 100):
@@ -67,8 +67,10 @@ async def ueba_alerts(limit: int = 50):
 
 @app.get("/demo")
 async def demo():
+    """Run a complete demo scenario"""
     t = Telematics(
         vehicle_id="VHC-DEMO",
+        vehicle_model="Tesla Model 3",  # 🆕 Added
         timestamp=datetime.utcnow(),
         mileage_km=58213,
         engine_temp_c=112.5,
