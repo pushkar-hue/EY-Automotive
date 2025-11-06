@@ -1,10 +1,10 @@
-# 🚗 Automotive Predictive Maintenance Agent
+# Automotive Predictive Maintenance Agent
 
 Welcome to the 'Automove [Hero + M&M]' hackathon project!
 
 This repository contains the **Master Orchestrator** for our agentic AI system. Its job is to coordinate multiple "worker" agents to predict vehicle failures, talk to customers, and schedule maintenance, all while feeding insights back to manufacturing.
 
-## 🚀 Quick Start
+## Quick Start
 
 Get the app running on your machine in 2 minutes.
 
@@ -39,7 +39,7 @@ Get the app running on your machine in 2 minutes.
 
 ---
 
-## 🗺️ Project Structure
+## Project Structure
 
 All our code is inside the `app/` directory. Here's where to find everything:
 
@@ -63,11 +63,11 @@ automotive_agent/
 └── requirements.txt     # Project dependencies
 ```
 
-## 🎯 Team Tasks & Where to Code
+##  Team Tasks & Where to Code
 
 Here's the breakdown of who works where.
 
-### 🤖 Mohit (Predictive Model)
+### Mohit (Predictive Model)
 
 Your goal is to make our diagnosis "smart" instead of just guessing.
 
@@ -77,7 +77,7 @@ Your goal is to make our diagnosis "smart" instead of just guessing.
     * **Replace this logic with your model.** You can load a `.pkl` file (e.g., from scikit-learn) or add your model code directly.
     * Your method **must** return a `PredictedIssue` object (defined in `app/schemas.py`).
 
-### 📊 Ved (Data Analysis & Scheduling)
+### Ved (Data Analysis & Scheduling)
 
 You're handling the "input" (data analysis) and "booking" (scheduling) parts of the flow.
 
@@ -86,7 +86,7 @@ You're handling the "input" (data analysis) and "booking" (scheduling) parts of 
     1.  `MockDataAgent`: Find the `analyze` method. This runs *before* Mohit's model. Your job is to add logic to find "anomalies" in the raw `Telematics` data.
     2.  `MockSchedulingAgent`: Find the `propose` and `confirm` methods. Right now, it just fakes some appointment slots. Your job is to make this smarter. (e.g., "only propose weekday slots," "check if a slot is already taken," etc.).
 
-### 🛡️ Shiva (UEBA Guard)
+### Shiva (UEBA Guard)
 
 You are our security and compliance layer. Your job is to spot "weird" behavior.
 
@@ -97,7 +97,7 @@ You are our security and compliance layer. Your job is to spot "weird" behavior.
     * **Improve it.** Add more heuristics. For example: "The SchedulingAgent should *never* try to read telematics data. If it does, create a **high** severity alert."
     * You can see your alerts at the `http://localhost:8000/ueba/alerts` endpoint.
 
-### 🧠 User (Orchestrator, Voice & Feedback)
+### Pushkar (Orchestrator, Voice & Feedback)
 
 You're working on the "brain" (orchestrator) and the "voice" (customer interaction).
 
@@ -117,7 +117,7 @@ You're working on the "brain" (orchestrator) and the "voice" (customer interacti
 
 ---
 
-## 🤝 How We Work (IMPORTANT!)
+## How We Work (IMPORTANT!)
 
 1.  **All Agents are MOCKED:** We are *not* building 6 different microservices. We are all editing the "mock" implementations in `app/agents/mocks.py`.
 2.  **The Schema is LAW:** If you need to pass new data between agents, you **must** add it to a Pydantic model in `app/schemas.py`. This prevents our app from breaking.
