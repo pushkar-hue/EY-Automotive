@@ -1,8 +1,8 @@
-# Automotive Predictive Maintenance Agent
+# AutoNexus AI: The Autonomous Service Ecosystem
 
-Welcome to the 'Automove [Hero + M&M]' hackathon project!
+**Welcome to our submission for the 'Automove [Hero + M&M]' Hackathon!**
 
-This repository contains the **Master Orchestrator** for our agentic AI system. Its job is to coordinate multiple "worker" agents to predict vehicle failures, talk to customers, and schedule maintenance, all while feeding insights back to manufacturing.
+AutoNexus AI is not just a predictive maintenance tool; it's an autonomous, agentic AI system designed to manage the entire vehicle service lifecycle. It acts as a "Master Agent" that orchestrates multiple worker agents to predict failures, proactively engage customers, manage service center operations, and provide a real-time feedback loop to manufacturing.
 
 ```mermaid
 graph TD;
@@ -34,6 +34,55 @@ graph TD;
         classDef first fill-opacity:0
         classDef last fill:#bfb6fc
 ```
+
+![WhatsApp Image 2025-11-09 at 19 26 54_68c219b7](https://github.com/user-attachments/assets/356683a6-97db-404e-9f96-5f9e79242da5)
+<img width="1243" height="897" alt="image" src="https://github.com/user-attachments/assets/32010bbc-830c-4d7f-a263-6e08f28eae31" />
+
+##  Our Innovative Edge
+
+While any team can build a predictive model, our system creates new, emergent capabilities by having agents collaborate.
+
+### 1. The Federated Fleet (Waze for Car Health)
+Our system doesn't just treat cars in isolation. It creates a **collective immune system**.
+* **Scenario:** Vehicle A hits a severe pothole, triggering its suspension sensors.
+* **Our Solution:** The `MasterAgent` instantly correlates the g-force data, fault code, and GPS location. It then broadcasts a proactive "hazard" alert to all other vehicles on that same route, preventing fleet-wide damage.
+
+### 2. Service-Center-as-a-Service (SCaaS)
+Our `MasterAgent` doesn't just *ask* for appointments; it **runs the service center**.
+* **Scenario:** The `DiagnosisAgent` forecasts a 40% spike in "brake pad" failures for the Mumbai region.
+* **Our Solution:** The `MasterAgent` doesn't wait. It autonomously checks inventory, sees a low stock, and **executes a purchase order for more brake pads** *before* the cars even fail, transforming the center from reactive to predictive.
+
+### 3. The Auto-Immune System (UEBA)
+Our security isn't just a passive alarm; it's an **active self-healing mechanism**.
+* **Scenario:** A `SchedulingAgent` is compromised and tries to access sensitive vehicle GPS history (anomalous behavior).
+* **Our Solution:** The `UEBAGuard` instantly detects the anomaly, **quarantines the agent**, and triggers a workflow to a safe "manual approval" mode, ensuring 100% service uptime and security.
+
+---
+
+## System Architecture
+
+Our solution is built on a **LangGraph-based Master Agent** that coordinates a team of specialized "Worker Agents":
+
+* **`MasterAgent (Orchestrator)`:** The "brain" that manages the state and flow of the entire process using LangGraph.
+* **`DataAnalysisAgent`:** Ingests and analyzes real-time telematics for anomalies.
+* **`DiagnosisAgent`:** Uses ML models to predict component failures and assign a risk score.
+* **`GeminiVoiceAgent`:** Our **Google Gemini-powered** customer concierge. It crafts and delivers empathetic, persuasive voice scripts to engage owners.
+* **`SchedulingAgent`:** Manages all service center logistics, from finding slots to confirming bookings.
+* **`ManufacturingAgent`:** Performs Root Cause Analysis (RCA) and pushes actionable insights back to the OEM to fix systemic flaws.
+* **`UEBAGuard`:** The security officer, monitoring all agent-to-agent communication for anomalous or unauthorized actions.
+
+---
+
+## Technology Stack
+
+* **Orchestration:** LangGraph
+* **AI / LLM:** Google Gemini Flash 2.0
+* **Backend Framework:** FastAPI
+* **Web Server:** Uvicorn
+* **Data Validation:** Pydantic 2.0
+* **Core Libraries:** Langchain-core, Python-dotenv
+
+---
 
 ## Quick Start
 
@@ -77,79 +126,54 @@ All our code is inside the `app/` directory. Here's where to find everything:
 ```
 automotive_agent/
 ├── app/
-│   ├── api.py           # ⭐️ All API routes (@app.get, @app.post)
-│   ├── orchestrator.py  # ⭐️ The MasterAgent class (the "brain")
-│   ├── schemas.py       # ⭐️ All Pydantic data models (Telematics, etc.)
-│   ├── ueba.py          # ⭐️ The UEBAGuard class and security rules
+│   ├── api.py           #  All API routes (@app.get, @app.post)
+│   ├── orchestrator.py  # The MasterAgent class (old)
+│   ├── schemas.py       # All Pydantic data models (Telematics, etc.)
+│   ├── ueba.py          # The UEBAGuard class and security rules
+|   |── orchestrator_graph.py # Orchestrator
+|   |── graph_states.py # states of the agents
 │   │
 │   ├── agents/
 │   │   ├── __init__.py
-│   │   ├── clients.py   # ⭐️ ABSTRACT classes (the "interfaces") for agents
-│   │   └── mocks.py     # ⭐️ MOCK classes (the "fake" agents we will edit)
+│   │   ├── clients.py   # ABSTRACT classes (the "interfaces") for agents
+│   │   └── mocks.py     #  MOCK classes 
 │   │
 │   ├── config.py        # App settings (e.g., USE_MOCKS)
 │   └── state.py         # In-memory "databases"
 │
-├── main.py              # ⭐️ Runs the app with uvicorn
+├── main.py              #  Runs the app with uvicorn
 └── requirements.txt     # Project dependencies
 ```
 
-##  Team Tasks & Where to Code
+How to Test (Hackathon Demo)
 
-Here's the breakdown of who works where.
+We've made it simple to demonstrate the full power of the system.
 
-### Mohit (Predictive Model)
+** 1. The Main Demo (http://localhost:8000/demo)**
 
-Your goal is to make our diagnosis "smart" instead of just guessing.
+This is the primary endpoint. Simply open this URL in your browser.
 
-* **Your File:** `app/agents/mocks.py`
-* **Your Class:** `MockDiagnosisAgent`
-* **Your Task:** Find the `predict` method inside this class. Right now, it just uses simple `if-else` logic.
-    * **Replace this logic with your model.** You can load a `.pkl` file (e.g., from scikit-learn) or add your model code directly.
-    * Your method **must** return a `PredictedIssue` object (defined in `app/schemas.py`).
+It triggers a pre-configured critical risk scenario (e.g., brake failure). You can watch your terminal to see the entire agentic workflow execute in real-time:
+- ✅ Data Analyzed
 
-### Ved (Data Analysis & Scheduling)
+- ✅ Critical Failure Predicted
 
-You're handling the "input" (data analysis) and "booking" (scheduling) parts of the flow.
+- ✅ LangGraph Routes to Critical Path
 
-* **Your File:** `app/agents/mocks.py`
-* **Your Classes:**
-    1.  `MockDataAgent`: Find the `analyze` method. This runs *before* Mohit's model. Your job is to add logic to find "anomalies" in the raw `Telematics` data.
-    2.  `MockSchedulingAgent`: Find the `propose` and `confirm` methods. Right now, it just fakes some appointment slots. Your job is to make this smarter. (e.g., "only propose weekday slots," "check if a slot is already taken," etc.).
+- ✅ Gemini Crafts a Voice Script (Printed to console)
 
-### Shiva (UEBA Guard)
+- ✅ Customer Call Simulated
 
-You are our security and compliance layer. Your job is to spot "weird" behavior.
+- ✅ Appointment Auto-Scheduled
 
-* **Your File:** `app/ueba.py`
-* **Your Class:** `UEBAGuard`
-* **Your Task:** Focus on the `log` method.
-    * It already has a simple allow-list and spike detection.
-    * **Improve it.** Add more heuristics. For example: "The SchedulingAgent should *never* try to read telematics data. If it does, create a **high** severity alert."
-    * You can see your alerts at the `http://localhost:8000/ueba/alerts` endpoint.
+- ✅ RCA Sent to Manufacturing (Printed to console)
 
-### Pushkar (Orchestrator, Voice & Feedback)
+**2. The API Docs (http://localhost:8000/docs)**
 
-You're working on the "brain" (orchestrator) and the "voice" (customer interaction).
+See all available API endpoints, schemas, and test them live using the Swagger UI.
 
-* **Orchestrator:**
-    * **Your File:** `app/orchestrator.py`
-    * **Your Class:** `MasterAgent`
-    * **Your Task:** Modify the `process_telematics` method. This is the main "flow" of our entire app. If you want to change the *order* of operations (e.g., "don't call the customer if the risk is low"), this is the place to do it.
+**3. The Security Dashboard (http://localhost:8000/ueba/alerts)**
 
-* **Voice & Feedback:**
-    * **Your File:** `app/agents/mocks.py`
-    * **Your Classes:** `MockVoiceAgent` and `MockFeedbackAgent`
-    * **Your Task:** This is where you'll implement the actual voice/feedback logic.
-        * In `MockVoiceAgent`, edit `craft_script` to make the
-            conversation more persuasive.
-        * In `call_owner`, you can add the `pyttsx3` and `speech_recognition` logic we discussed to replace the `random.random() < 0.8` (just make sure to `pip install` them!).
-        * In `MockFeedbackAgent`, improve the `request_feedback` method.
+Check this endpoint after running the demo to see the logs from our UEBAGuard. You can see how it logs every agent's actions and would flag any anomalies.
 
----
 
-## How We Work (IMPORTANT!)
-
-1.  **All Agents are MOCKED:** We are *not* building 6 different microservices. We are all editing the "mock" implementations in `app/agents/mocks.py`.
-2.  **The Schema is LAW:** If you need to pass new data between agents, you **must** add it to a Pydantic model in `app/schemas.py`. This prevents our app from breaking.
-3.  **Test with the Demo Endpoint:** After you make a change, save the file (uvicorn will auto-reload) and just refresh `http://localhost:8000/demo` in your browser to run a full test.
