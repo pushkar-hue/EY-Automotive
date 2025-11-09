@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoMove | Orchestrator Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f97316;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .text-accent { color: var(--accent-cyan); }
+        .text-danger { color: var(--accent-red); }
+        .text-success { color: var(--accent-green); }
+        .text-purple { color: var(--accent-purple); }
+        .text-orange { color: var(--accent-orange); }
+
+        header {
+            padding: 0.75rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--bg-tertiary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .brand { font-weight: 700; font-size: 1.25rem; display: flex; align-items: center; gap: 0.75rem; }
+
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 350px 1fr 320px;
+            gap: 1px;
+            background: var(--bg-tertiary);
+            overflow: hidden;
+        }
+        .panel {
+            background: var(--bg-primary);
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            height: 100%;
+        }
+        .panel-right { background: #162032; }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        .card-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+        input:focus { outline: none; border-color: var(--accent-blue); }
+
+        .btn {
+            width: 100%;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-demo { 
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .btn-demo:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .agent-step {
+            border-left: 2px solid var(--bg-tertiary);
+            padding-left: 2rem;
+            padding-bottom: 2.5rem;
+            position: relative;
+        }
+        .agent-step:last-child { border-left-color: transparent; }
+        .agent-step::before {
+            content: '';
+            position: absolute;
+            left: -0.6rem; top: 0.25rem;
+            width: 1rem; height: 1rem;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: 3px solid var(--bg-primary);
+            z-index: 2;
+        }
+        .agent-step.active::before { background: var(--accent-blue); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2); }
+        .agent-step.risk::before { background: var(--accent-red); }
+        .agent-step.success::before { background: var(--accent-green); }
+        .agent-step.inactive { opacity: 0.4; }
+        .agent-step.inactive::before { background: var(--bg-tertiary); }
+
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .metric { background: var(--bg-tertiary); padding: 1rem; border-radius: 6px; text-align: center; }
+        .metric-val { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+        .metric-label { font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.05em; }
+
+        .alert-item {
+            padding: 1rem;
+            border-radius: 6px;
+            background: rgba(30, 41, 59, 0.7);
+            border-left: 3px solid var(--bg-tertiary);
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .alert-high { border-left-color: var(--accent-red); background: rgba(239, 68, 68, 0.1); }
+        .alert-medium { border-left-color: var(--accent-orange); background: rgba(249, 115, 22, 0.1); }
+
+        #loading {
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(5px);
+            display: none; place-items: center; z-index: 100;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-critical { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .status-high { background: rgba(249, 115, 22, 0.2); color: var(--accent-orange); }
+        .status-medium { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+        .status-low { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+    </style>
+</head>
+<body>
+
+    <div id="loading">
+        <div style="text-align: center;">
+            <div class="spinner" style="margin: 0 auto 1rem auto;"></div>
+            <p style="letter-spacing: 0.2em; font-size: 0.875rem; color: var(--accent-cyan);">ORCHESTRATING...</p>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            AutoMove <span style="opacity: 0.5">/</span> <span class="text-accent">Master Orchestrator</span>
+        </div>
+        <div style="display: flex; gap: 2rem; font-size: 0.875rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="width: 8px; height: 8px; background: var(--accent-green); border-radius: 50%; box-shadow: 0 0 8px var(--accent-green);"></div>
+                System Online
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="panel">
+            <button onclick="runDemo()" class="btn btn-demo">
+                <span>▶ RUN LIVE DEMO</span>
+            </button>
+
+            <div class="card">
+                <div class="card-header">📡 Telematics Injector</div>
+                <form id="telematicsForm" onsubmit="submitManual(event)">
+                    <div class="form-group">
+                        <label>VEHICLE ID</label>
+                        <input type="text" id="vhc_id" value="VHC-9001">
+                    </div>
+                    <div class="metrics-grid form-group">
+                        <div>
+                            <label>RPM</label>
+                            <input type="number" id="rpm" value="4500">
+                        </div>
+                        <div>
+                            <label>TEMP (°C)</label>
+                            <input type="number" id="temp" value="115.5">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                         <label>ACTIVE DTCs</label>
+                         <input type="text" id="dtc" value="P0301, P0128" placeholder="e.g. P0301">
+                    </div>
+                    <button type="submit" class="btn btn-primary">INGEST DATA</button>
+                </form>
+            </div>
+
+            <div class="card" style="background: transparent; border-style: dashed; opacity: 0.7;">
+                <div class="card-header">ℹ️ Architecture</div>
+                 <p style="font-size: 0.8rem; line-height: 1.6; color: var(--text-secondary);">
+                    Data flows through a LangGraph of 6 specialized agents. The Master Orchestrator routes information based on risk assessment, ensuring only necessary agents are engaged.
+                 </p>
+            </div>
+        </div>
+
+        <div class="panel" style="padding: 2rem 3rem; background: #131c2e;">
+            <div id="results-placeholder" style="height: 100%; display: grid; place-items: center; text-align: center; color: var(--text-secondary); opacity: 0.5;">
+                <div>
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">💤</div>
+                    <h2>Awaiting Telematics</h2>
+                    <p>Inject data to wake up the agents</p>
+                </div>
+            </div>
+
+            <div id="results-container" style="display: none; max-width: 600px; margin: 0 auto;">
+                
+                <div id="step-diagnosis" class="agent-step">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-red);">🔍 Diagnosis Agent</h3>
+                    <div class="card metrics-grid">
+                         <div class="metric">
+                             <div class="metric-label">RISK LEVEL</div>
+                             <div id="res-risk-level" class="metric-val text-danger">--</div>
+                         </div>
+                         <div class="metric">
+                             <div class="metric-label">RISK SCORE</div>
+                             <div id="res-risk" class="metric-val">--</div>
+                         </div>
+                    </div>
+                    <div class="card" style="margin-top: 1rem;">
+                        <div class="metric-label" style="margin-bottom: 0.5rem;">PRIMARY DIAGNOSIS</div>
+                        <div id="res-issue" style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;">--</div>
+                        <p id="res-rationale" style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">--</p>
+                    </div>
+                </div>
+
+                <div id="step-voice" class="agent-step">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-blue);">🗣️ Voice Agent</h3>
+                    <div class="card" style="background: #1e293b; border-left: 4px solid var(--accent-blue);">
+                        <div class="card-header" style="color: var(--accent-blue); margin-bottom: 0.5rem;">GENERATED CALL SCRIPT</div>
+                        <pre id="res-script" class="font-mono" style="white-space: pre-wrap; font-size: 0.85rem; line-height: 1.5; color: var(--text-secondary);">--</pre>
+                    </div>
+                    <div id="customer-response" class="card" style="margin-top: 1rem; display: none;">
+                        <div class="metric-label" style="margin-bottom: 0.5rem;">CUSTOMER RESPONSE</div>
+                        <div id="res-customer" style="font-size: 0.9rem;">--</div>
+                    </div>
+                </div>
+
+                <div id="step-scheduling" class="agent-step">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-green);">📅 Scheduling Agent</h3>
+                    <div id="booking-success" class="card" style="display: none; background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="font-size: 1.5rem; background: rgba(16, 185, 129, 0.1); width: 50px; height: 50px; display: grid; place-items: center; border-radius: 50%; color: var(--accent-green);">✓</div>
+                            <div>
+                                <div style="font-weight: 700; color: var(--accent-green);">APPOINTMENT CONFIRMED</div>
+                                <div id="res-booking-details" style="font-size: 0.9rem; margin-top: 0.25rem;">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="booking-none" class="card" style="display: none; color: var(--text-secondary); font-style: italic;">
+                        No appointment scheduled.
+                    </div>
+                </div>
+
+                <div id="step-mfg" class="agent-step">
+                     <h3 style="margin-bottom: 1rem; color: var(--accent-purple);">🏭 Manufacturing Agent</h3>
+                     <div class="card">
+                         <div class="card-header">SUPPLY CHAIN ACTION</div>
+                         <div id="res-mfg" style="font-size: 0.9rem;">--</div>
+                     </div>
+                </div>
+
+                 <div id="step-feedback" class="agent-step">
+                    <h3 style="margin-bottom: 1rem; color: var(--accent-orange);">🧠 Feedback Agent</h3>
+                    <div class="card">
+                        <div class="card-header">RLHF LOOP</div>
+                        <div id="res-feedback" style="font-size: 0.9rem;">--</div>
+                    </div>
+               </div>
+
+            </div>
+        </div>
+
+        <div class="panel panel-right">
+            <div class="card-header" style="color: var(--accent-red);">🛡️ UEBA Watchdog Live Feed</div>
+            <div id="ueba-feed" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "http://localhost:8000"; 
+
+        const el = (id) => document.getElementById(id);
+        const showLoading = (show) => el('loading').style.display = show ? 'grid' : 'none';
+
+        async function runDemo() {
+            showLoading(true);
+            try {
+                const res = await fetch(`${API_BASE}/demo`);
+                if(!res.ok) throw new Error("Backend error: " + await res.text());
+                const data = await res.json();
+                console.log("Demo response:", data);
+                renderResults(data);
+            } catch (e) { 
+                console.error("Demo failed:", e);
+                alert("Demo failed: " + e.message); 
+            } 
+            finally { showLoading(false); }
+        }
+
+        async function submitManual(e) {
+            e.preventDefault();
+            showLoading(true);
+            const payload = {
+                vehicle_id: el('vhc_id').value,
+                vehicle_model: "Manual Entry Model",
+                timestamp: new Date().toISOString(),
+                mileage_km: 55000,
+                engine_temp_c: parseFloat(el('temp').value) || 90,
+                rpm: parseFloat(el('rpm').value) || 3000,
+                brake_pad_mm: 4.0,
+                oil_quality_pct: 75.0,
+                dtc_codes: el('dtc').value.split(',').map(s => s.trim()).filter(Boolean)
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/ingest/telematics`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error("Backend error: " + await res.text());
+                const data = await res.json();
+                console.log("Manual ingest response:", data);
+                renderResults(data);
+            } catch (err) { 
+                console.error("Ingest failed:", err);
+                alert("Error: " + err.message); 
+            } 
+            finally { showLoading(false); }
+        }
+
+        function renderResults(data) {
+            console.log("Rendering results:", data);
+            el('results-placeholder').style.display = 'none';
+            el('results-container').style.display = 'block';
+
+            // Parse the actual backend response structure
+            const result = data.result || {};
+
+            // Reset all steps to inactive
+            ['diagnosis', 'voice', 'scheduling', 'mfg', 'feedback'].forEach(step => {
+                const stepEl = el(`step-${step}`);
+                if (stepEl) {
+                    stepEl.classList.remove('active', 'risk', 'success');
+                    stepEl.classList.add('inactive');
+                }
+            });
+
+            // 1. DIAGNOSIS - Parse from result.issue and result.risk_level
+            if (result.issue) {
+                const diagStep = el('step-diagnosis');
+                diagStep.classList.remove('inactive');
+                diagStep.classList.add('active', 'risk');
+
+                const issue = result.issue;
+                const riskLevel = result.risk_level || 'UNKNOWN';
+                
+                // Risk level badge
+                el('res-risk-level').innerHTML = `<span class="status-badge status-${riskLevel.toLowerCase()}">${riskLevel}</span>`;
+                
+                // Risk score
+                const riskScore = issue.risk_score !== undefined ? Math.round(issue.risk_score * 100) : '--';
+                el('res-risk').innerText = riskScore + (riskScore !== '--' ? '%' : '');
+                
+                // Component and failure info
+                const component = (issue.component || 'Unknown').toUpperCase();
+                const daysToFailure = issue.days_to_failure || issue.horizon_days;
+                const failureInfo = daysToFailure ? ` (${daysToFailure} days to failure)` : '';
+                
+                el('res-issue').innerText = `${component} FAILURE${failureInfo}`;
+                el('res-rationale').innerText = issue.rationale || "No rationale provided.";
+            }
+
+            // 2. VOICE SCRIPT - Parse from result.voice
+            if (result.voice && result.voice.script) {
+                const voiceStep = el('step-voice');
+                voiceStep.classList.remove('inactive');
+                voiceStep.classList.add('active');
+
+                const voiceData = result.voice;
+                const script = voiceData.script;
+                
+                // Extract script text
+                let scriptText = '';
+                if (typeof script === 'string') {
+                    scriptText = script;
+                } else if (script.script) {
+                    scriptText = script.script;
+                } else {
+                    scriptText = JSON.stringify(script, null, 2);
+                }
+                
+                el('res-script').innerText = scriptText;
+
+                // Show customer acceptance status
+                if (voiceData.accepted !== undefined) {
+                    el('customer-response').style.display = 'block';
+                    el('res-customer').innerHTML = voiceData.accepted 
+                        ? '<span class="status-badge status-low">✓ ACCEPTED</span>' 
+                        : '<span class="status-badge status-medium">✗ DECLINED</span>';
+                }
+            }
+
+            // 3. SCHEDULING - Parse from result.scheduling
+            if (result.scheduling) {
+                const schedStep = el('step-scheduling');
+                schedStep.classList.remove('inactive');
+                schedStep.classList.add('active', 'success');
+
+                const scheduling = result.scheduling;
+                const confirmation = scheduling.confirmation;
+                
+                if (confirmation && confirmation.booking_id) {
+                    el('booking-success').style.display = 'flex';
+                    el('booking-none').style.display = 'none';
+                    
+                    const bookingId = confirmation.booking_id;
+                    const slot = confirmation.chosen_slot;
+                    const center = confirmation.center || 'Service Center';
+                    const timeStr = slot ? new Date(slot).toLocaleString() : 'TBD';
+                    
+                    el('res-booking-details').innerHTML = `
+                        <strong>ID:</strong> ${bookingId}<br>
+                        <strong>Time:</strong> ${timeStr}<br>
+                        <strong>Location:</strong> ${center}
+                    `;
+                } else {
+                    el('booking-success').style.display = 'none';
+                    el('booking-none').style.display = 'block';
+                }
+            } else {
+                el('booking-success').style.display = 'none';
+                el('booking-none').style.display = 'block';
+            }
+
+            // 4. MANUFACTURING - Parse from result.rca (Root Cause Analysis)
+            if (result.rca) {
+                const mfgStep = el('step-mfg');
+                mfgStep.classList.remove('inactive');
+                mfgStep.classList.add('active');
+
+                const rca = result.rca;
+                let mfgText = `<strong>RCA Report:</strong> ${rca.title || 'N/A'}<br>`;
+                mfgText += `<strong>Summary:</strong> ${rca.summary || 'N/A'}<br>`;
+                
+                if (rca.actions && rca.actions.length > 0) {
+                    mfgText += `<strong>Actions:</strong><br>`;
+                    rca.actions.forEach(action => {
+                        mfgText += `• ${action}<br>`;
+                    });
+                }
+                
+                el('res-mfg').innerHTML = mfgText;
+            } else {
+                el('res-mfg').innerText = "No manufacturing action required.";
+            }
+
+            // 5. FEEDBACK - Parse from result.feedback
+            if (result.feedback) {
+                const fbStep = el('step-feedback');
+                fbStep.classList.remove('inactive');
+                fbStep.classList.add('active');
+
+                const fb = result.feedback;
+                let feedbackText = `<strong>Status:</strong> ${fb.status || 'N/A'}<br>`;
+                feedbackText += `<strong>Booking ID:</strong> ${fb.booking_id || 'N/A'}<br>`;
+                feedbackText += `<strong>Method:</strong> ${fb.delivery_method || 'N/A'}<br>`;
+                
+                if (fb.incentive) {
+                    feedbackText += `<strong>Incentive:</strong> ${fb.incentive}`;
+                }
+                
+                el('res-feedback').innerHTML = feedbackText;
+            } else {
+                el('res-feedback').innerText = "Feedback loop will activate post-service.";
+            }
+
+            // Display UEBA alerts from response if present
+            if (data.ueba_alerts && data.ueba_alerts.length > 0) {
+                displayUEBAAlerts(data.ueba_alerts);
+            } else {
+                fetchUEBA();
+            }
+        }
+
+        async function fetchUEBA() {
+            try {
+                const res = await fetch(`${API_BASE}/ueba/alerts?limit=10`);
+                if (!res.ok) return;
+                const alerts = await res.json();
+                displayUEBAAlerts(alerts);
+            } catch (e) { 
+                console.warn("UEBA poll failed", e); 
+            }
+        }
+
+        function displayUEBAAlerts(alerts) {
+            const container = el('ueba-feed');
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<div style="opacity: 0.5; font-style: italic; font-size: 0.9rem;">No active threats detected.</div>';
+                return;
+            }
+
+            container.innerHTML = alerts.map(a => {
+                const severity = (a.severity || 'low').toLowerCase();
+                const timestamp = a.timestamp ? new Date(a.timestamp).toLocaleTimeString() : 
+                                 a.ts ? new Date(a.ts * 1000).toLocaleTimeString() : '--';
+                const actor = a.actor || a.event?.actor || 'SYSTEM';
+                const reason = a.reason || a.description || 'Alert triggered';
+                
+                return `
+                    <div class="alert-item alert-${severity}">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; font-weight: 600;">
+                            <span style="text-transform: uppercase;">${a.severity || 'INFO'}</span>
+                            <span style="opacity: 0.6; font-weight: 400;">${timestamp}</span>
+                        </div>
+                        <div style="color: var(--accent-blue); margin-bottom: 0.25rem;">${actor}</div>
+                        <div style="opacity: 0.8; line-height: 1.4;">${reason}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Poll for security alerts every 5 seconds
+        setInterval(fetchUEBA, 5000);
+        fetchUEBA(); // Initial load
+    </script>
+</body>
+</html>
